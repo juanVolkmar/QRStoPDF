@@ -18,7 +18,12 @@ with left:
     if st.button("🧹 Limpiar archivos"):
         st.session_state.uploader_key = str(uuid4())
 
-    uploaded_files = st.file_uploader("Sube una imagen", type=["jpg", "jpeg", "png"], accept_multiple_files=True, key=st.session_state.uploader_key)
+    if "pdf_name" not in st.session_state:
+        st.session_state.pdf_name = ""
+
+    st.subheader("Sube una imagen")
+    uploaded_files = st.file_uploader("", type=["jpg", "jpeg", "png"], accept_multiple_files=True, key=st.session_state.uploader_key, label_visibility="hidden")
+    
     if uploaded_files:
         with left:
             for img in uploaded_files:
@@ -26,10 +31,10 @@ with left:
                 st.image(image, use_container_width=True)
     with right:
         with st.form("Guardar PDF"):
-            nombre = st.text_input("Nombre: ")
+            nombre = st.text_input("Nombre: ", key="pdf_name")
             pdf = st.form_submit_button("📦 Generar PDF")
             
-        if pdf:
+        if pdf and uploaded_files:
             factor_escala = 3  # Aumentar resolución 2x
             ancho_pagina, alto_pagina = A4
             cols, rows = 2, 3
@@ -71,4 +76,10 @@ with left:
             pdf.save()
             buffer.seek(0)
             st.success("✅ PDF Guardado")
-            st.download_button("📥 Descargar PDF", data=buffer, file_name=nombre + ".pdf", mime="application/pdf")
+
+            if ".pdf" in nombre:
+                st.download_button("📥 Descargar PDF", data=buffer, file_name=nombre, mime="application/pdf")
+                st.session_state.pdf_name = ""
+            else:
+                st.download_button("📥 Descargar PDF", data=buffer, file_name=nombre + ".pdf", mime="application/pdf") 
+                st.session_state.pdf_name = ""         
